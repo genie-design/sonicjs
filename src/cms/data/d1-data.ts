@@ -104,10 +104,10 @@ export async function deleteD1ByTableAndId(d1, table, id) {
   console.log("deleteD1ByTableAndId", table, id);
   const db = drizzle(d1);
 
-  const schmea = getRepoFromTable(table);
-  let sql = await db.delete(schmea).where(eq(schmea.id, id)).toSQL();
+  const schema = getRepoFromTable(table);
+  let sql = await db.delete(schema).where(eq(schema.id, id)).toSQL();
 
-  let result = await db.delete(schmea).where(eq(schmea.id, id)).run();
+  let result = await db.delete(schema).where(eq(schema.id, id)).run();
 
   return result;
 }

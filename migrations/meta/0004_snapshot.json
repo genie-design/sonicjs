@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "9016e2b8-cf4f-47dc-896a-dd0de26fa4d1",
+  "id": "7fda66d5-c272-46eb-8829-318a113d7b13",
   "prevId": "48045afa-3181-4647-bbac-023365f51839",
   "tables": {
     "categories": {
@@ -251,64 +251,6 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "user_keys": {
-      "name": "user_keys",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "hashed_password": {
-          "name": "hashed_password",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "createdOn": {
-          "name": "createdOn",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "updatedOn": {
-          "name": "updatedOn",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "user_keys_user_id_users_id_fk": {
-          "name": "user_keys_user_id_users_id_fk",
-          "tableFrom": "user_keys",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
     "user_sessions": {
       "name": "user_sessions",
       "columns": {
@@ -326,32 +268,11 @@
           "notNull": true,
           "autoincrement": false
         },
-        "active_expires": {
-          "name": "active_expires",
+        "expires_at": {
+          "name": "expires_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "idle_expires": {
-          "name": "idle_expires",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "createdOn": {
-          "name": "createdOn",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "updatedOn": {
-          "name": "updatedOn",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         }
       },
@@ -407,6 +328,13 @@
         },
         "password": {
           "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "hashedPassword": {
+          "name": "hashedPassword",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

@@ -512,6 +512,8 @@ api.get("/form-components/:route", async (ctx) => {
         if (f.key === "userId") {
           f.disabled = true;
           f.defaultValue = user.userId;
+        } else if (f.key === "hashedPassword") {
+          f.disabled = true;
         }
         return f;
       });

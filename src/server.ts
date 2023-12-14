@@ -9,12 +9,12 @@ import { example } from "./custom/example";
 import { status } from "./cms/api/status";
 import { log } from "./cms/util/logger";
 
-import { AuthRequest, Session, User } from "lucia";
+import { Session, User, verifyRequestOrigin } from "lucia";
 import { initializeLucia } from "./cms/auth/lucia";
 import { isAuthEnabled } from "./cms/auth/auth-helpers";
+import { getCookie } from "hono/cookie";
 
 export type Variables = {
-  authRequest: AuthRequest;
   session?: Session;
   user?: User;
   authEnabled?: boolean;
@@ -24,27 +24,50 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 export type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
 app.use("*", async (ctx, next) => {
-  const path = ctx.req.path;
-  console.log("ENV", ctx.env);
-  if (ctx.env?.useAuth === "true" && !path.includes("/public")) {
-    const auth = initializeLucia(ctx.env.D1DATA, ctx.env);
-    const authRequest = auth.handleRequest(ctx);
-    let session = await authRequest.validate();
-    if (!session) {
-      session = await authRequest.validateBearerToken();
-    }
-    if (session?.user?.userId) {
-      ctx.set("user", session.user);
-    }
+  const authEnabled = await isAuthEnabled(ctx);
+  ctx.set("authEnabled", authEnabled);
 
-    authRequest.setSession(session);
-
-    ctx.set("authRequest", authRequest);
-    ctx.set("session", session);
-    const authEnabled = await isAuthEnabled(ctx);
-    ctx.set("authEnabled", authEnabled);
+  // CSRF protection
+  const originHeader = ctx.req.headers.get("Origin");
+  const hostHeader = ctx.req.headers.get("Host");
+  let allowCookie = true;
+  if (
+    !originHeader ||
+    !hostHeader ||
+    !verifyRequestOrigin(originHeader, [hostHeader])
+  ) {
+    allowCookie = false;
   }
-  await next();
+  const path = ctx.req.path;
+  if (authEnabled && !path.includes("/public")) {
+    const auth = initializeLucia(ctx.env.D1DATA, ctx.env);
+    let sessionId = allowCookie
+      ? getCookie(ctx, auth.sessionCookieName) ?? null
+      : null;
+    if (!sessionId) {
+      const authorizationHeader = ctx.req.headers.get("Authorization");
+      sessionId = auth.readBearerToken(authorizationHeader ?? "");
+    }
+    if (sessionId) {
+      const { session, user } = await auth.validateSession(sessionId);
+      if (session && session.fresh) {
+        ctx.header(
+          "Set-Cookie",
+          auth.createSessionCookie(sessionId).serialize(),
+          {
+            append: true,
+          }
+        );
+      } else if (!session) {
+        ctx.header("Set-Cookie", auth.createBlankSessionCookie().serialize(), {
+          append: true,
+        });
+      }
+      ctx.set("session", session);
+      ctx.set("user", user);
+    }
+  }
+  return next();
 });
 
 //CORS

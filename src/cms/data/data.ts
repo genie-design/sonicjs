@@ -297,9 +297,9 @@ async function dataAddToInMemoryCache(
   }
 }
 
-export async function insertRecord(d1, kv, data) {
+export async function insertRecord(d1, kv, data: { table: string; data: any }) {
   const content = data;
-  const id = uuidv4();
+  const id = content.data?.id || uuidv4();
   const timestamp = new Date().getTime();
   content.data.id = id;
   let error = "";

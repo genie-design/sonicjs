@@ -28,7 +28,8 @@ export const userSchema = {
   lastName: text("lastName"),
   email: text("email"),
   password: text("password"),
-  role: text("role").$type<"admin" | "user">(),
+  hashedPassword: text("hashedPassword"),
+  role: text("role").$type<"admin" | "editor" | "user">(),
 };
 
 export const usersTable = sqliteTable("users", {
@@ -38,38 +39,18 @@ export const usersTable = sqliteTable("users", {
 
 export type User = typeof usersTable._.model.select;
 
-export const userKeysSchema = {
-  id: text("id").primaryKey(),
-  user_id: text("user_id")
-    .notNull()
-    .references(() => usersTable.id),
-  hashed_password: text("hashed_password"),
-};
-
-export const userKeysTable = sqliteTable("user_keys", {
-  ...userKeysSchema,
-  ...auditSchema,
-});
 export const userSessionsSchema = {
   id: text("id").primaryKey(),
   user_id: text("user_id")
     .notNull()
     .references(() => usersTable.id),
-  active_expires: int("active_expires").notNull(),
-  idle_expires: int("idle_expires").notNull(),
+  expires_at: int("expires_at").notNull(),
 };
 
 export const userSessionsTable = sqliteTable("user_sessions", {
   ...userSessionsSchema,
-  ...auditSchema,
 });
 
-export const keysRelations = relations(userKeysTable, ({ one, many }) => ({
-  user: one(usersTable, {
-    fields: [userKeysTable.user_id],
-    references: [usersTable.id],
-  }),
-}));
 export const sessionsRelations = relations(userSessionsTable, ({ one }) => ({
   user: one(usersTable, {
     fields: [userSessionsTable.user_id],
@@ -161,7 +142,6 @@ export const categoriesToPostsTable = sqliteTable(
 export const usersRelations = relations(usersTable, ({ many }) => ({
   posts: many(postsTable),
   comments: many(commentsTable),
-  keys: many(userKeysTable),
   sessions: many(userSessionsTable),
 }));
 
@@ -511,6 +491,11 @@ export const apiConfig: SonicTableConfig[] = [
         },
         password: {
           update: isAdminOrUser,
+        },
+        hashedPassword: {
+          read: false,
+          update: false,
+          create: false,
         },
         role: {
           read: (ctx, value, doc) => {
