@@ -11,6 +11,11 @@ import { Bindings } from "../types/bindings";
 export const Head = () => {
   return (
     <head>
+      <script
+        src="https://js.sentry-cdn.com/2d76bded4b03732e2bee3139fc1e8962.min.js"
+        crossorigin="anonymous"
+      ></script>
+      <script>myUndefinedFunction();</script>
       <script src="/public/js/color-modes.js"></script>
 
       <meta charset="utf-8" />
