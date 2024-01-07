@@ -26,36 +26,39 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 export type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
 app.use("*", async (ctx, next) => {
-  const sentryConfig = {
-    dsn: ctx.env.SENTRY_DSN,
-    tracesSampleRate: 1.0,
-  };
-  const sentryMiddleware = sentryHono(sentryConfig);
-  let hasExecutionContext = true;
-  try {
-    ctx.executionCtx;
-  } catch {
-    hasExecutionContext = false;
-  }
-
-  const cerr = console.error;
-  if (cerr.toString().includes("[native code]")) {
-    console.error = (...args) => {
-      const sentry = new Toucan({
-        ...sentryConfig,
-        requestDataOptions: {
-          allowedHeaders: ["user-agent"],
-          allowedSearchParams: /(.*)/,
-        },
-        request: ctx.req.raw,
-        context: hasExecutionContext ? ctx.executionCtx : new MockContext(),
-      });
-      sentry.captureException(args);
-      cerr(...args);
+  if (ctx.env.SENTRY_DSN) {
+    const sentryConfig = {
+      dsn: ctx.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
     };
-  }
+    const sentryMiddleware = sentryHono(sentryConfig);
+    let hasExecutionContext = true;
+    try {
+      ctx.executionCtx;
+    } catch {
+      hasExecutionContext = false;
+    }
 
-  return await sentryMiddleware(ctx, next);
+    const cerr = console.error;
+    if (cerr.toString().includes("[native code]")) {
+      console.error = (...args) => {
+        const sentry = new Toucan({
+          ...sentryConfig,
+          requestDataOptions: {
+            allowedHeaders: ["user-agent"],
+            allowedSearchParams: /(.*)/,
+          },
+          request: ctx.req.raw,
+          context: hasExecutionContext ? ctx.executionCtx : new MockContext(),
+        });
+        sentry.captureException(args);
+        cerr(...args);
+      };
+    }
+
+    return await sentryMiddleware(ctx, next);
+  }
+  return next();
 });
 app.use("*", async (ctx, next) => {
   const path = ctx.req.path;
