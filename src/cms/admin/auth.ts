@@ -49,7 +49,6 @@ const fieldsAccess = userTableConfig?.access?.fields;
 // View user
 authAPI.get(`/users/:id`, async (ctx) => {
   const id = ctx.req.param("id");
-  console.error("sentry test", id);
   if (userTableConfig.hooks?.beforeOperation) {
     await userTableConfig.hooks?.beforeOperation(ctx, "read", id);
   }
