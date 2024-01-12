@@ -12,14 +12,12 @@ import { tusAPI } from "./cms/api/tus";
 
 import { AuthRequest, Session, User } from "lucia";
 import { initializeLucia } from "./cms/auth/lucia";
-import { isAuthEnabled } from "./cms/auth/auth-helpers";
 import { sentry as sentryHono } from "@hono/sentry";
 import { Toucan } from "toucan-js";
 export type Variables = {
   authRequest: AuthRequest;
   session?: Session;
   user?: User;
-  authEnabled?: boolean;
 };
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -62,9 +60,7 @@ app.use("*", async (ctx, next) => {
 });
 app.use("*", async (ctx, next) => {
   const path = ctx.req.path;
-  const useAuthEnvEnabled =
-    ctx.env?.useAuth === "true" || ctx.env?.useAuth === true;
-  if (useAuthEnvEnabled && !path.includes("/public")) {
+  if (!path.includes("/public")) {
     const auth = initializeLucia(ctx.env.D1DATA, ctx.env);
     const authRequest = auth.handleRequest(ctx);
     let session = await authRequest.validate();
@@ -79,8 +75,6 @@ app.use("*", async (ctx, next) => {
 
     ctx.set("authRequest", authRequest);
     ctx.set("session", session);
-    const authEnabled = await isAuthEnabled(ctx);
-    ctx.set("authEnabled", authEnabled);
   }
   await next();
 });
