@@ -192,6 +192,19 @@ export const tableSchemas = {
   userSessions,
 };
 
+export const schema = {
+  schema: Object.keys(tableSchemas).reduce<Record<string, any>>((acc, key) => {
+    const schema = tableSchemas[key];
+    if (schema.table) {
+      acc[key] = schema.table;
+    }
+    if (schema.relation) {
+      acc[`${key}Relations`] = schema.relation;
+    }
+    return acc;
+  }, {}),
+};
+
 for (const key of Object.keys(tableSchemas)) {
   const table = tableSchemas[key];
   if (table.route) {

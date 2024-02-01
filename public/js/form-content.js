@@ -61,7 +61,19 @@ async function initUppy(id) {
   });
   return uppy;
 }
+let relationModal;
+async function pickRelationEventHandler(event) {
+  const table = event.component.attributes["data-table"];
+  console.log("table", table);
+  relationModal = relationModal || new bootstrap.Modal("#relationModal");
 
+  if (table) {
+    const grid = document.getElementById("relationGrid");
+    grid.setAttribute("data-route", table);
+    window.setupGrid(grid);
+    relationModal.show();
+  }
+}
 function chooseFileEventHandler(uppy, event) {
   if (uppy) {
     let field = event.component.attributes["data-field"];
@@ -149,7 +161,26 @@ function setupComponents(data) {
   return {
     fileFields,
     contentType: data.reduce((acc, c) => {
-      if (c.metaType == "file") {
+      if (c.relation?.table && !c.disabled) {
+        acc.push(
+          {
+            ...c,
+            disabled: true,
+          },
+          {
+            ...c,
+            key: undefined,
+            attributes: {
+              "data-table": c.relation.table,
+              key: "relation",
+            },
+            label: `Pick ${c.label || c.key}`,
+            type: "button",
+            action: "event",
+            theme: "secondary",
+          }
+        );
+      } else if (c.metaType == "file") {
         acc.push({
           ...c,
           disabled: true,
@@ -449,6 +480,8 @@ function newContent() {
             component.setValue(v);
             fileModal.hide();
           });
+        } else if (event.component.attributes.key === "relation") {
+          pickRelationEventHandler(event);
         }
       });
     });
@@ -561,7 +594,6 @@ function editContent() {
           $("#contentFormSaveButton").removeAttr("disabled");
           if (event.components) {
             contentTypeComponents = event.components;
-            console.log("event ->", event);
           }
           if (event && event.changed) {
             const changedKey = event.changed.component.key;
@@ -585,6 +617,8 @@ function editContent() {
               component.setValue(v);
               fileModal.hide();
             });
+          } else if (event.component.attributes.key === "relation") {
+            pickRelationEventHandler(event);
           }
         });
       });

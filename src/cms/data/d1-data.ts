@@ -140,11 +140,15 @@ export async function updateD1Data(
   return { id } ?? result;
 }
 
-export function getSchemaFromTable(tableName) {
+export function getSchemaFromTable(tableName: keyof typeof tableSchemas) {
   return tableSchemas[tableName]?.definition;
 }
 
-export function getRepoFromTable(tableName) {
+export function getRelationsFromTable(tableName: keyof typeof tableSchemas) {
+  return tableSchemas[tableName]?.relation;
+}
+
+export function getRepoFromTable(tableName: keyof typeof tableSchemas) {
   return tableSchemas[tableName]?.table;
 }
 
