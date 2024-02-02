@@ -70,7 +70,7 @@ async function pickRelationEventHandler(event, cb) {
     grid.innerHTML = "";
     if (!relationModal) {
       grid.addEventListener("click", function (e) {
-        if (!e.target.closest(".delete-btn")) {
+        if (!e.target.closest(".delete-btn") && !e.target.closest("a")) {
           let element = e.target;
           while (element && element.tagName !== "TR") {
             element = element.parentElement;
@@ -182,15 +182,35 @@ async function pickFileEventHandler(cb) {
     fileModal.show();
   }
 }
-
-function setupComponents(data) {
-  const fileFields = data.filter(
+function lookupRelations(relationLookups, form) {
+  for (let i = 0; i < relationLookups.length; i++) {
+    const relationLookup = relationLookups[i];
+    axios.get(relationLookup[0]).then((resp) => {
+      const item = resp.data.data;
+      const display = item.name ?? item.title ?? item.firstName ?? item.id;
+      form.getComponent(relationLookup[1]).setValue(display);
+    });
+  }
+}
+function setupComponents(contentType, data) {
+  const relationLookups = [];
+  const fileFields = contentType.filter(
     (c) => c.metaType === "file" || c.metaType === "file[]"
   );
   return {
+    relationLookups,
     fileFields,
-    contentType: data.reduce((acc, c) => {
+    contentType: contentType.reduce((acc, c) => {
       if (c.relation?.table && !c.disabled) {
+        const valueId = data[c.key];
+        console.log("valueId", valueId);
+        relationLookups.push([
+          `/v1/${c.relation.table}/${valueId}`,
+          `${c.key}RelationDisplay`,
+        ]);
+        axios.get(`/v1/${c.relation.table}/${valueId}`).then((resp) => {
+          console.log(resp.data);
+        });
         acc.push(
           {
             ...c,
@@ -295,16 +315,34 @@ function setupComponents(data) {
             },
             {
               key: undefined,
-              label: "Upload File",
-              attributes: {
-                "data-field": c.key,
-                array: true,
-                key: "upload",
-              },
-              type: "button",
-              action: "event",
-              theme: "success",
-              readOnly: true,
+              type: "container",
+              components: [
+                {
+                  key: undefined,
+                  label: "Upload File",
+                  attributes: {
+                    "data-field": c.key,
+                    array: true,
+                    key: "upload",
+                  },
+                  type: "button",
+                  action: "event",
+                  theme: "success",
+                  readOnly: true,
+                },
+                {
+                  key: undefined,
+                  attributes: {
+                    "data-field": c.key,
+                    key: "pick",
+                  },
+                  label: "Pick Existing",
+                  type: "button",
+                  action: "event",
+                  theme: "info",
+                  readOnly: true,
+                },
+              ],
             },
           ],
         });
@@ -422,46 +460,6 @@ const addPreviewElement = (value, element, i, field) => {
     );
   }
 };
-function setupPickExistingButton(fileFields, form) {
-  if (fileFields.length) {
-    for (const field of fileFields) {
-      const component = form.getComponent(field.key);
-      const element = component?.element;
-
-      const trs = element.querySelectorAll("tr");
-      if (trs.length) {
-        for (let i = 0; i < trs.length; i++) {
-          const tr = trs[i + 1];
-          if (tr) {
-            const button = tr.querySelector(
-              `button[data-field='${field.key}']`
-            );
-            const pickBtn = tr.querySelector(".btn-pick-existing");
-            if (button && !pickBtn) {
-              const td = tr.querySelector("td");
-              const newBtn = button.cloneNode();
-              newBtn.classList.add("btn-pick-existing");
-              newBtn.innerText = "Pick Existing";
-              newBtn.style = "margin-left: 5px";
-              newBtn.addEventListener("click", () => {
-                pickFileEventHandler((v) => {
-                  const input = td.querySelector("input");
-                  const textComponents = component.components.filter(
-                    (c) => c.type === "textfield"
-                  );
-                  textComponents[i].setValue(v);
-                  addPreviewElement(v, input, i, field.key);
-                  fileModal.hide();
-                });
-              });
-              button.insertAdjacentElement("afterend", newBtn);
-            }
-          }
-        }
-      }
-    }
-  }
-}
 function setupFilePreviews(fileFields, form) {
   if (fileFields.length) {
     for (const field of fileFields) {
@@ -533,13 +531,16 @@ function newContent() {
     console.log(response.headers);
     console.log(response.config);
 
-    const { fileFields, contentType } = setupComponents(response.data);
+    const { fileFields, contentType, relationLookups } = setupComponents(
+      response.data
+    );
     response.data = contentType;
     Formio.icons = "fontawesome";
     // Formio.createForm(document.getElementById("formio"), {
     Formio.createForm(document.getElementById("formio"), {
       components: response.data,
     }).then(function (form) {
+      lookupRelations(relationLookups, form);
       let uppy;
       if (fileFields.length) {
         const formio = document.getElementById("formio");
@@ -554,11 +555,9 @@ function newContent() {
           .catch((e) => {
             console.log(e);
           });
-        setupPickExistingButton(fileFields, form);
       }
 
       form.on("redraw", function () {
-        setupPickExistingButton(fileFields, form);
         setupFilePreviews(fileFields, form);
       });
       form.on("submit", function (data) {
@@ -576,7 +575,6 @@ function newContent() {
             .map((f) => f.key)
             .includes(changedKey);
           if (fileFieldWasChanged) {
-            setupPickExistingButton(fileFields, form);
             setupFilePreviews(fileFields, form);
           }
         }
@@ -611,8 +609,9 @@ function editContent() {
   axios
     .get(`/v1/${routeWithoutAuth}/${contentId}?includeContentType`)
     .then((response) => {
-      const { fileFields, contentType } = setupComponents(
-        response.data.contentType
+      const { fileFields, contentType, relationLookups } = setupComponents(
+        response.data.contentType,
+        response.data.data
       );
       response.data.contentType = contentType;
       // handle array values to the formio format
@@ -641,6 +640,7 @@ function editContent() {
       Formio.createForm(document.getElementById("formio"), {
         components: response.data.contentType,
       }).then(function (form) {
+        lookupRelations(relationLookups, form);
         if (fileFields.length) {
           const formio = document.getElementById("formio");
           const childDiv = document.createElement("div");
@@ -654,7 +654,6 @@ function editContent() {
             .catch((e) => {
               console.log(e);
             });
-          setupPickExistingButton(fileFields, form);
         }
         form.on("before", function () {
           console.log("before");
@@ -663,8 +662,6 @@ function editContent() {
           console.log("render");
         });
         form.on("redraw", function () {
-          console.log("redraw");
-          setupPickExistingButton(fileFields, form);
           setupFilePreviews(fileFields, form);
         });
         form.on("submit", function ({ data }) {
@@ -701,7 +698,6 @@ function editContent() {
               .map((f) => f.key)
               .includes(changedKey);
             if (fileFieldWasChanged) {
-              setupPickExistingButton(fileFields, form);
               setupFilePreviews(fileFields, form);
             }
           }

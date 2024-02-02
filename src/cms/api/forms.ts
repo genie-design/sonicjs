@@ -37,13 +37,15 @@ export function getForm(ctx: AppContext, table) {
     createTableRelationsHelpers(relation.table)
   );
 
-  // console.log("schema ", schema);
-  // console.log("relation ", relation);
-  // console.log("config", relation.config);
-  // console.log("table", relation.table);
-  // console.log("field", relation.table["postId"]);
+  console.log("relationConfig", relationsConfig);
 
   const config = apiConfig.find((tbl) => tbl.table === table);
+
+  const manyRelationKeys = Object.keys(relationsConfig).filter((key) => {
+    const relation = relationsConfig[key];
+    return relation?.constructor.name === "_Many";
+  });
+
   for (var field in schema) {
     let formField = getField(field);
     const metaType = config.fields?.[field]?.type || "auto";
