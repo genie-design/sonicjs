@@ -62,15 +62,44 @@ async function initUppy(id) {
   return uppy;
 }
 let relationModal;
-async function pickRelationEventHandler(event) {
+async function pickRelationEventHandler(event, cb) {
   const table = event.component.attributes["data-table"];
-  console.log("table", table);
-  relationModal = relationModal || new bootstrap.Modal("#relationModal");
 
   if (table) {
     const grid = document.getElementById("relationGrid");
+    grid.innerHTML = "";
+    if (!relationModal) {
+      grid.addEventListener("click", function (e) {
+        if (!e.target.closest(".delete-btn")) {
+          let element = e.target;
+          while (element && element.tagName !== "TR") {
+            element = element.parentElement;
+          }
+          if (element) {
+            const deleteBtn = element.querySelector(".delete-btn");
+            if (deleteBtn) {
+              const itemId = deleteBtn.getAttribute("data-delete-id");
+              const displayText = element.querySelector(
+                "[data-column-id=record]"
+              ).innerText;
+              cb(itemId, displayText);
+            }
+          }
+        }
+      });
+    }
+    relationModal = relationModal || new bootstrap.Modal("#relationModal");
     grid.setAttribute("data-route", table);
-    window.setupGrid(grid);
+    window.setupGrid(grid, {
+      style: {
+        td: {
+          cursor: "pointer",
+        },
+      },
+      className: {
+        table: "table table-striped table-hover",
+      },
+    });
     relationModal.show();
   }
 }
@@ -165,19 +194,60 @@ function setupComponents(data) {
         acc.push(
           {
             ...c,
+            hidden: true,
             disabled: true,
           },
           {
             ...c,
-            key: undefined,
-            attributes: {
-              "data-table": c.relation.table,
-              key: "relation",
-            },
-            label: `Pick ${c.label || c.key}`,
-            type: "button",
+            key: `${c.key}RelationDisplay`,
+            label: singularize(c.relation.table),
+            type: "textfield",
             action: "event",
-            theme: "secondary",
+            disabled: true,
+          },
+          {
+            type: "container",
+            components: [
+              {
+                ...c,
+                key: undefined,
+                attributes: {
+                  "data-table": c.relation.table,
+                  "data-field": c.key,
+                  key: "relation",
+                },
+                label: `Pick ${singularize(c.relation.table)}`,
+                type: "button",
+                action: "event",
+                theme: "info",
+              },
+              {
+                ...c,
+                key: undefined,
+                attributes: {
+                  "data-table": c.relation.table,
+                  "data-field": c.key,
+                  key: "resetRelation",
+                },
+                label: `Reset ${singularize(c.relation.table)}`,
+                type: "button",
+                action: "event",
+                theme: "warning",
+              },
+              {
+                ...c,
+                key: undefined,
+                attributes: {
+                  "data-table": c.relation.table,
+                  "data-field": c.key,
+                  key: "removeRelation",
+                },
+                label: `Unlink ${singularize(c.relation.table)}`,
+                type: "button",
+                action: "event",
+                theme: "danger",
+              },
+            ],
           }
         );
       } else if (c.metaType == "file") {
@@ -195,7 +265,7 @@ function setupComponents(data) {
           label: "Upload File",
           type: "button",
           action: "event",
-          theme: "secondary",
+          theme: "success",
           readOnly: true,
         });
         acc.push({
@@ -208,7 +278,7 @@ function setupComponents(data) {
           label: "Pick Existing",
           type: "button",
           action: "event",
-          theme: "secondary",
+          theme: "info",
           readOnly: true,
         });
       } else if (c.metaType == "file[]") {
@@ -233,7 +303,7 @@ function setupComponents(data) {
               },
               type: "button",
               action: "event",
-              theme: "secondary",
+              theme: "success",
               readOnly: true,
             },
           ],
@@ -259,6 +329,14 @@ function handleSubmitData(data) {
       data[key] = null;
     }
   });
+
+  // remove display fields
+  data = Object.fromEntries(
+    Object.entries(data).filter(
+      ([key, value]) => !key.endsWith("RelationDisplay")
+    )
+  );
+
   return data;
 }
 function getFilePreviewElement(url, isImage, i, field) {
@@ -412,6 +490,39 @@ function setupFilePreviews(fileFields, form) {
     }
   }
 }
+function handleCustomEvent(event, uppy, form) {
+  if (event.component.attributes.key === "upload") {
+    chooseFileEventHandler(uppy, event);
+  } else if (event.component.attributes.key === "pick") {
+    pickFileEventHandler((v) => {
+      const field = event.component.attributes["data-field"];
+      const component = form.getComponent(field);
+      component.setValue(v);
+      fileModal.hide();
+    });
+  } else if (event.component.attributes.key === "relation") {
+    pickRelationEventHandler(event, (v, dv) => {
+      const field = event.component.attributes["data-field"];
+      const component = form.getComponent(field);
+      const displayComponent = form.getComponent(`${field}RelationDisplay`);
+      component.setValue(v);
+      displayComponent.setValue(dv);
+      relationModal.hide();
+    });
+  } else if (event.component.attributes.key === "resetRelation") {
+    const field = event.component.attributes["data-field"];
+    const component = form.getComponent(field);
+    const displayComponent = form.getComponent(`${field}RelationDisplay`);
+    component.resetValue();
+    displayComponent.resetValue();
+  } else if (event.component.attributes.key === "removeRelation") {
+    const field = event.component.attributes["data-field"];
+    const component = form.getComponent(field);
+    const displayComponent = form.getComponent(`${field}RelationDisplay`);
+    component.setValue("");
+    displayComponent.setValue("");
+  }
+}
 function newContent() {
   console.log("contentType", route);
 
@@ -471,18 +582,7 @@ function newContent() {
         }
       });
       form.on("customEvent", function (event) {
-        if (event.component.attributes.key === "upload") {
-          chooseFileEventHandler(uppy, event);
-        } else if (event.component.attributes.key === "pick") {
-          pickFileEventHandler((v) => {
-            const field = event.component.attributes["data-field"];
-            const component = form.getComponent(field);
-            component.setValue(v);
-            fileModal.hide();
-          });
-        } else if (event.component.attributes.key === "relation") {
-          pickRelationEventHandler(event);
-        }
+        handleCustomEvent(event, uppy, form);
       });
     });
   });
@@ -608,18 +708,7 @@ function editContent() {
         });
 
         form.on("customEvent", function (event) {
-          if (event.component.attributes.key === "upload") {
-            chooseFileEventHandler(uppy, event);
-          } else if (event.component.attributes.key === "pick") {
-            pickFileEventHandler((v) => {
-              const field = event.component.attributes["data-field"];
-              const component = form.getComponent(field);
-              component.setValue(v);
-              fileModal.hide();
-            });
-          } else if (event.component.attributes.key === "relation") {
-            pickRelationEventHandler(event);
-          }
+          handleCustomEvent(event, uppy, form);
         });
       });
     });

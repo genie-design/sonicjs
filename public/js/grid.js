@@ -1,13 +1,19 @@
 const url = window.location.href;
 const authMode = url.includes("/auth/");
 const gridWrapper = document.getElementById("grid");
-function setupGrid(gridWrapper) {
+function setupGrid(gridWrapper, config) {
+  config = config || {};
+  config.columns = config.columns || [];
+  config.pagination = config.pagination || {};
+  config.server = config.server || {};
   if (gridWrapper) {
     function getTable() {
       return $(gridWrapper).data("route");
     }
     const dataGrid = new gridjs.Grid({
+      ...config,
       columns: [
+        ...config.columns,
         {
           name: "Record",
           formatter: (displayValue) => gridjs.html(`${displayValue}`),
@@ -29,6 +35,7 @@ function setupGrid(gridWrapper) {
         },
       ],
       pagination: {
+        ...config.pagination,
         limit: 10,
         server: {
           url: (prev, page, limit) =>
@@ -36,6 +43,7 @@ function setupGrid(gridWrapper) {
         },
       },
       server: {
+        ...config.server,
         url: authMode
           ? `/admin/api/auth/${getTable()}`
           : `/admin/api/${getTable()}`,
