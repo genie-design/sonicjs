@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "77d05b97-e692-425e-80b5-1990fc24f7e2",
+  "id": "9546aa96-9d03-429f-b92e-deac9a032acf",
   "prevId": "9016e2b8-cf4f-47dc-896a-dd0de26fa4d1",
   "tables": {
     "categories": {
@@ -116,7 +116,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "categoriesToPosts_postId_categoryId_pk": {
+          "columns": [
+            "categoryId",
+            "postId"
+          ],
+          "name": "categoriesToPosts_postId_categoryId_pk"
+        }
+      },
       "uniqueConstraints": {}
     },
     "comments": {
@@ -146,6 +154,13 @@
         "postId": {
           "name": "postId",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tags": {
+          "name": "tags",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -211,6 +226,27 @@
         },
         "userId": {
           "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "images": {
+          "name": "images",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tags": {
+          "name": "tags",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
