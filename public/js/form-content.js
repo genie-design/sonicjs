@@ -202,15 +202,17 @@ function setupComponents(contentType, data) {
     fileFields,
     contentType: contentType.reduce((acc, c) => {
       if (c.relation?.table && !c.disabled) {
-        const valueId = data[c.key];
-        console.log("valueId", valueId);
-        relationLookups.push([
-          `/v1/${c.relation.table}/${valueId}`,
-          `${c.key}RelationDisplay`,
-        ]);
-        axios.get(`/v1/${c.relation.table}/${valueId}`).then((resp) => {
-          console.log(resp.data);
-        });
+        if (data) {
+          const valueId = data[c.key];
+          console.log("valueId", valueId);
+          relationLookups.push([
+            `/v1/${c.relation.table}/${valueId}`,
+            `${c.key}RelationDisplay`,
+          ]);
+          axios.get(`/v1/${c.relation.table}/${valueId}`).then((resp) => {
+            console.log(resp.data);
+          });
+        }
         acc.push(
           {
             ...c,
