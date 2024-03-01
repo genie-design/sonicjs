@@ -33,18 +33,17 @@ export function getForm(ctx: AppContext, table) {
 
   const schema = getSchemaFromTable(table);
   const relation = getRelationsFromTable(table);
-  const relationsConfig = relation.config(
+  const relationsConfig = relation?.config(
     createTableRelationsHelpers(relation.table)
   );
 
-  console.log("relationConfig", relationsConfig);
-
   const config = apiConfig.find((tbl) => tbl.table === table);
-
-  const manyRelationKeys = Object.keys(relationsConfig).filter((key) => {
-    const relation = relationsConfig[key];
-    return relation?.constructor.name === "_Many";
-  });
+  if (relationsConfig) {
+    const manyRelationKeys = Object.keys(relationsConfig).filter((key) => {
+      const relation = relationsConfig[key];
+      return relation?.constructor.name === "_Many";
+    });
+  }
 
   for (var field in schema) {
     let formField = getField(field);
@@ -70,21 +69,24 @@ export function getForm(ctx: AppContext, table) {
         ],
       };
     }
-    const fieldRelationKey = Object.keys(relationsConfig).find((key) => {
-      const relation = relationsConfig[key];
-      if (relation?.config?.fields) {
-        const fields = relation.config.fields;
-        return fields.find((f) => f.name === formField.key);
+
+    if (relationsConfig) {
+      const fieldRelationKey = Object.keys(relationsConfig).find((key) => {
+        const relation = relationsConfig[key];
+        if (relation?.config?.fields) {
+          const fields = relation.config.fields;
+          return fields.find((f) => f.name === formField.key);
+        }
+      });
+      if (fieldRelationKey) {
+        const fieldRelation = relationsConfig[fieldRelationKey];
+        formField.relation = {
+          table: fieldRelation.referencedTableName as string,
+          many: fieldRelation.constructor.name === "_Many",
+          fields: fieldRelation.config.fields.map((f) => f.name),
+          references: fieldRelation.config.references.map((f) => f.name),
+        };
       }
-    });
-    if (fieldRelationKey) {
-      const fieldRelation = relationsConfig[fieldRelationKey];
-      formField.relation = {
-        table: fieldRelation.referencedTableName as string,
-        many: fieldRelation.constructor.name === "_Many",
-        fields: fieldRelation.config.fields.map((f) => f.name),
-        references: fieldRelation.config.references.map((f) => f.name),
-      };
     }
     formFields.push(formField);
   }

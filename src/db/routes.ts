@@ -1,9 +1,8 @@
 import * as users from "./schema/users";
-import * as posts from "./schema/posts";
-import * as comments from "./schema/comments";
-import * as categories from "./schema/categories";
-import * as categoriesToPosts from "./schema/categoriesToPosts";
+import * as socials from "./schema/socials";
 import * as userKeys from "./schema/userKeys";
+import * as products from "./schema/products";
+import * as features from "./schema/features";
 import * as userSessions from "./schema/userSessions";
 
 import { AppContext } from "../server";
@@ -184,12 +183,11 @@ export const apiConfig: ApiConfig[] = [];
 
 export const tableSchemas = {
   users,
-  posts,
-  comments,
-  categories,
-  categoriesToPosts,
+  socials,
   userKeys,
   userSessions,
+  products,
+  features,
 };
 
 export const schema = {

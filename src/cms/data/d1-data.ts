@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/d1";
-import { and, eq } from "drizzle-orm";
+import { Relations, and, eq } from "drizzle-orm";
 import { tableSchemas } from "../../db/routes";
 
 export async function getAllContent(db) {
@@ -145,7 +145,10 @@ export function getSchemaFromTable(tableName: keyof typeof tableSchemas) {
 }
 
 export function getRelationsFromTable(tableName: keyof typeof tableSchemas) {
-  return tableSchemas[tableName]?.relation;
+  const schema = tableSchemas[tableName];
+  if ("relation" in schema && schema?.relation) {
+    return schema.relation;
+  }
 }
 
 export function getRepoFromTable(tableName: keyof typeof tableSchemas) {

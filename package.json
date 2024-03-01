@@ -11,8 +11,8 @@
     "deploy": "wrangler pages deploy dist",
     "test": "jest --verbose",
     "generate": "drizzle-kit generate:sqlite --schema=./src/db/schema --out=./migrations",
-    "up": "wrangler d1 migrations apply sonicjs --local",
-    "up:prod": "wrangler d1 migrations apply sonicjs",
+    "up": "wrangler d1 migrations apply BROWN_DOG_BISCUITS --local",
+    "up:prod": "wrangler d1 migrations apply BROWN_DOG_BISCUITS",
     "tail": "wrangler pages deployment tail"
   },
   "keywords": [],
