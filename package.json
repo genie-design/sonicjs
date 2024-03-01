@@ -19,14 +19,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "drizzle-kit": "^0.19.12",
+    "drizzle-kit": "^0.20.14",
     "esbuild": "^0.17.18",
     "esbuild-plugin-copy": "^2.1.1",
-    "miniflare": "^3.20231030.2",
+    "miniflare": "^3.20231218.4",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.0.3",
     "typescript": "^5.0.4",
-    "wrangler": "^3.10.0"
+    "wrangler": "^3.25.0"
   },
   "dependencies": {
     "@hono/sentry": "^1.0.0",
@@ -40,7 +40,7 @@
     "@uppy/dashboard": "^3.7.1",
     "@uppy/tus": "^3.5.0",
     "date-fns": "^2.30.0",
-    "drizzle-orm": "^0.27.2",
+    "drizzle-orm": "^0.29.3",
     "esbuild-jest": "^0.5.0",
     "gridjs": "^6.0.6",
     "gridjs-react": "^6.0.1",

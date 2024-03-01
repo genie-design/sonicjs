@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "9e4a7fff-6e41-4fb7-8468-ffb6fb283a2b",
+  "id": "9546aa96-9d03-429f-b92e-deac9a032acf",
   "prevId": "9016e2b8-cf4f-47dc-896a-dd0de26fa4d1",
   "tables": {
     "categories": {
@@ -121,7 +121,8 @@
           "columns": [
             "categoryId",
             "postId"
-          ]
+          ],
+          "name": "categoriesToPosts_postId_categoryId_pk"
         }
       },
       "uniqueConstraints": {}
@@ -153,6 +154,13 @@
         "postId": {
           "name": "postId",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tags": {
+          "name": "tags",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -230,8 +238,15 @@
           "notNull": false,
           "autoincrement": false
         },
-        "file": {
-          "name": "file",
+        "images": {
+          "name": "images",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tags": {
+          "name": "tags",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

@@ -1,28 +1,90 @@
+import { fi } from "date-fns/locale";
 import { apiConfig } from "../../db/routes";
 import { AppContext } from "../../server";
-import { getSchemaFromTable } from "../data/d1-data";
+import { getRelationsFromTable, getSchemaFromTable } from "../data/d1-data";
+import { singularize } from "../util/utils";
+import { createTableRelationsHelpers } from "drizzle-orm";
+interface Field {
+  type: string;
+  key?: string;
+  label: string;
+  metaType?: string;
+  disabled?: boolean;
+  placeholder?: string;
+  input?: boolean;
+  tooltip?: string;
+  description?: string;
+  action?: string;
+  defaultValue?: string;
+  relation?: {
+    table: string;
+    fields: string[];
+    references: string[];
+    many: boolean;
+  };
+  components?: Field[];
+}
 
 export function getForm(ctx: AppContext, table) {
-  let formFields: {
-    type: string;
-    key?: string;
-    label: string;
-    action?: string;
-    defaultValue?: string;
-    disabled?: boolean;
-  }[] = [];
+  let formFields: Field[] = [];
 
   //TODO: amke dynamic
   // const schema = `${table}Schema`;
 
   const schema = getSchemaFromTable(table);
+  const relation = getRelationsFromTable(table);
+  const relationsConfig = relation.config(
+    createTableRelationsHelpers(relation.table)
+  );
+
+  console.log("relationConfig", relationsConfig);
+
   const config = apiConfig.find((tbl) => tbl.table === table);
+
+  const manyRelationKeys = Object.keys(relationsConfig).filter((key) => {
+    const relation = relationsConfig[key];
+    return relation?.constructor.name === "_Many";
+  });
+
   for (var field in schema) {
-    const formField = getField(field);
+    let formField = getField(field);
     const metaType = config.fields?.[field]?.type || "auto";
     formField.metaType = metaType;
     if (formField.metaType === "auto") {
       delete formField.metaType;
+    } else if (
+      formField.metaType.includes("[]") &&
+      formField.metaType !== "file[]"
+    ) {
+      const c = formField;
+      formField = {
+        type: "datagrid",
+        label: c.label || c.key,
+        key: c.key,
+        components: [
+          {
+            ...c,
+            key: `${c.key}`,
+            label: singularize(c.label || c.key),
+          },
+        ],
+      };
+    }
+    const fieldRelationKey = Object.keys(relationsConfig).find((key) => {
+      const relation = relationsConfig[key];
+      if (relation?.config?.fields) {
+        const fields = relation.config.fields;
+        return fields.find((f) => f.name === formField.key);
+      }
+    });
+    if (fieldRelationKey) {
+      const fieldRelation = relationsConfig[fieldRelationKey];
+      formField.relation = {
+        table: fieldRelation.referencedTableName as string,
+        many: fieldRelation.constructor.name === "_Many",
+        fields: fieldRelation.config.fields.map((f) => f.name),
+        references: fieldRelation.config.references.map((f) => f.name),
+      };
     }
     formFields.push(formField);
   }
@@ -59,19 +121,13 @@ export function getForm(ctx: AppContext, table) {
 
   return formFields;
 }
-
-function getField(fieldName) {
+function getField(fieldName): Field {
   const disabled = fieldName == "id";
   return {
     type: getFieldType(fieldName),
     key: fieldName,
     label: fieldName,
-    metaType: "auto",
     disabled,
-    // placeholder: "Enter your first name.",
-    // input: true,
-    // tooltip: "Enter your <strong>First Name</strong>",
-    // description: "Enter your <strong>First Name</strong>",
   };
 }
 

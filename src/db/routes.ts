@@ -170,10 +170,10 @@ export interface ApiConfig {
   fields?: {
     [field: string]:
       | {
-          type: "auto";
+          type: "auto" | "string[]";
         }
       | {
-          type: "file";
+          type: "file" | "file[]";
           bucket: (ctx: AppContext) => R2Bucket;
           path?: string | ((ctx: AppContext) => string);
         };
@@ -190,6 +190,19 @@ export const tableSchemas = {
   categoriesToPosts,
   userKeys,
   userSessions,
+};
+
+export const schema = {
+  schema: Object.keys(tableSchemas).reduce<Record<string, any>>((acc, key) => {
+    const schema = tableSchemas[key];
+    if (schema.table) {
+      acc[key] = schema.table;
+    }
+    if (schema.relation) {
+      acc[`${key}Relations`] = schema.relation;
+    }
+    return acc;
+  }, {}),
 };
 
 for (const key of Object.keys(tableSchemas)) {
