@@ -4,6 +4,7 @@ import * as userKeys from "./schema/userKeys";
 import * as products from "./schema/products";
 import * as features from "./schema/features";
 import * as userSessions from "./schema/userSessions";
+import * as skus from "./schema/skus";
 
 import { AppContext } from "../server";
 import { isAdminOrEditor } from "./config-helpers";
@@ -188,6 +189,7 @@ export const tableSchemas = {
   userSessions,
   products,
   features,
+  skus,
 };
 
 export const schema = {
