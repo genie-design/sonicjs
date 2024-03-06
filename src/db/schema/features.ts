@@ -15,6 +15,7 @@ export const definition = {
   title: text("title"),
   body: text("body"),
   link: text("link"),
+  linkText: text("link_text"),
   image: text("image"),
 };
 
