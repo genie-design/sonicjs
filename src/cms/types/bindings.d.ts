@@ -5,11 +5,10 @@ export type Bindings = {
   KVDATA: KVNamespace;
   D1DATA: D1Database;
   __D1_BETA__D1DATA: D1Database;
-  useAuth?: string | boolean;
   AUTH_ITERATIONS?: string;
-  AUTH_HASH?: "SHA512" | "SHA384" | "SHA256";
-  AUTH_KDF?: "pbkdf2" | "scrypt";
-  ENVIRONMENT?: "production" | "development";
+  AUTH_HASH?: 'SHA512' | 'SHA384' | 'SHA256';
+  AUTH_KDF?: 'pbkdf2' | 'scrypt';
+  ENVIRONMENT?: 'production' | 'development';
   R2_STORAGE?: R2Bucket;
   SENTRY_DSN?: string;
 };

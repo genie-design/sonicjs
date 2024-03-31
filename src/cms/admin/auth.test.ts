@@ -1,99 +1,101 @@
-import { drizzle } from "drizzle-orm/d1";
-import app from "../../server";
-import { sql } from "drizzle-orm";
-import { insertD1Data } from "../data/d1-data";
+import { drizzle } from 'drizzle-orm/d1';
+import app from '../../server';
+import { sql } from 'drizzle-orm';
+import { getD1DataByTable, insertD1Data } from '../data/d1-data';
+import { postData } from '../util/fetch';
+import {
+  createCategoriesTestTable1,
+  createUserAndGetToken,
+  createUserTestTables
+} from '../util/testing';
+import { createUser } from '../auth/lucia';
+const { __D1_BETA__D1DATA, KVDATA } = getMiniflareBindings();
 
-const env = getMiniflareBindings();
-env.KVDATA = env.KVDATA;
-env.D1DATA = env.__D1_BETA__D1DATA;
+const toJson = function (json) {
+  return json;
+};
 
-env.useAuth = true;
+const ctx = {
+  env: { KVDATA: KVDATA, D1DATA: __D1_BETA__D1DATA },
+  json: toJson
+};
 
-describe("admin should be restricted", () => {
-  it("ping should return 200", async () => {
-    const res = await app.request("http://localhost/admin/ping");
+describe('admin should be restricted', () => {
+  it('ping should return 200', async () => {
+    const res = await app.fetch(
+      new Request('http://localhost/v1/ping'),
+      ctx.env
+    );
+    expect(res.status).toBe(200);
+    let body = await res.json();
+    expect(body).toBe('/v1/ping is all good');
+  });
+
+  it('categories record', async () => {
+    await createCategoriesTestTable1(ctx);
+
+    await insertD1Data(ctx.env.D1DATA, ctx.env.KVDATA, 'categories', {
+      id: '1',
+      title: 'My Title',
+      body: 'Body goes here'
+    });
+
+    let req = new Request('http://localhost/v1/categories', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    let res = await app.fetch(req, ctx.env);
+    expect(res.status).toBe(200);
+    let body = await res.json();
+    expect(body.data[0].id).toBe('1');
+  });
+
+  it('create and login user', async () => {
+    const token = await createUserAndGetToken(app, ctx);
+  });
+
+  it('anyone can list categories', async () => {
+    let req = new Request('http://localhost/v1/categories', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    let res = await app.fetch(req, ctx.env);
     expect(res.status).toBe(200);
   });
 
-  it("user record", async () => {
-    createTestTables();
-
-    await insertD1Data(env.D1DATA, env.KVDATA, "users", {
-      firstName: "John",
-      id: "aaa",
-      email: "a@a.com",
-      password: "password",
-      role: 'admin'
+  it('admin can see their own record', async () => {
+    const user = await createUserAndGetToken(app, ctx);
+    // TODO should be able to get users
+    let req = new Request(`http://localhost/v1/auth/users/${user.id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${user.token}`
+      }
     });
-
-    let req = new Request("http://localhost/v1/users/aaa", {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    let res = await app.fetch(req, env);
+    let res = await app.fetch(req, ctx.env);
     expect(res.status).toBe(200);
+    let userResponse = await res.json();
+    expect(userResponse.data.id).toBe(user.id);
   });
+
+  // it('admin can see all user records', async () => {
+  //   const user = await createUserAndGetToken(app, ctx);
+  //   // const user2 = await createUserAndGetToken(app, ctx, 'b@b.com', 'password', 'editor');
+
+  //   let req = new Request(`http://localhost/v1/auth/users/`, {
+  //     method: 'GET',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Authorization: `Bearer ${user.token}`
+  //     }
+  //   });
+  //   let res = await app.fetch(req, ctx.env);
+  //   expect(res.status).toBe(200);
+  //   let usersResponse = await res.json();
+  //   expect(usersResponse.data.length).toBe(1);
+  // });
+
 });
-
-function createTestTables() {
-  createTestTable1();
-  createTestTable2();
-  createTestTable3();
-}
-
-function createTestTable1() {
-  const db = drizzle(env.D1DATA);
-  console.log("creating test table start");
-  db.run(sql`
-      CREATE TABLE users (
-        id text PRIMARY KEY NOT NULL,
-        firstName text,
-        lastName text,
-        email text,
-        password text,
-        role text,
-        createdOn integer,
-        updatedOn integer
-      );
-      `);
-  console.log("creating test table end");
-
-  return db;
-}
-
-function createTestTable2() {
-  const db = drizzle(env.D1DATA);
-  console.log("creating test table start");
-  db.run(sql`
-    CREATE TABLE user_keys (
-        id text PRIMARY KEY NOT NULL,
-        user_id text NOT NULL,
-        hashed_password text,
-        createdOn integer,
-        updatedOn integer,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE no action ON DELETE no action
-      );
-      `);
-  console.log("creating test table end");
-
-  return db;
-}
-
-function createTestTable3() {
-  const db = drizzle(env.D1DATA);
-  console.log("creating test table start");
-  db.run(sql`
-    CREATE TABLE user_sessions (
-        id text PRIMARY KEY NOT NULL,
-        user_id text NOT NULL,
-        active_expires integer NOT NULL,
-        idle_expires integer NOT NULL,
-        createdOn integer,
-        updatedOn integer,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE no action ON DELETE no action
-      );
-      `);
-  console.log("creating test table end");
-
-  return db;
-}
