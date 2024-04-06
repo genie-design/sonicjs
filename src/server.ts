@@ -1,4 +1,4 @@
-import { Context, Hono } from 'hono';
+import { Context, Hono, Next } from 'hono';
 import { cors } from 'hono/cors';
 
 import { api } from './cms/api/api';
@@ -12,8 +12,7 @@ import { tusAPI } from './cms/api/tus';
 
 import { AuthRequest, Session, User } from 'lucia';
 import { initializeLucia } from './cms/auth/lucia';
-import { sentry as sentryHono } from '@hono/sentry';
-import { Toucan } from 'toucan-js';
+
 export type Variables = {
   authRequest: AuthRequest;
   session?: Session;
@@ -23,41 +22,6 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 export type AppContext = Context<{ Bindings: Bindings; Variables: Variables }>;
 
-app.use('*', async (ctx, next) => {
-  if (ctx.env.SENTRY_DSN) {
-    const sentryConfig = {
-      dsn: ctx.env.SENTRY_DSN,
-      tracesSampleRate: 1.0
-    };
-    const sentryMiddleware = sentryHono(sentryConfig);
-    let hasExecutionContext = true;
-    try {
-      ctx.executionCtx;
-    } catch {
-      hasExecutionContext = false;
-    }
-
-    const cerr = console.error;
-    if (cerr.toString().includes('[native code]')) {
-      console.error = (...args) => {
-        const sentry = new Toucan({
-          ...sentryConfig,
-          requestDataOptions: {
-            allowedHeaders: ['user-agent'],
-            allowedSearchParams: /(.*)/
-          },
-          request: ctx.req.raw,
-          context: hasExecutionContext ? ctx.executionCtx : new MockContext()
-        });
-        sentry.captureException(args);
-        cerr(...args);
-      };
-    }
-
-    return await sentryMiddleware(ctx, next);
-  }
-  return next();
-});
 app.use('*', async (ctx, next) => {
   const path = ctx.req.path;
   if (!path.includes('/public')) {
@@ -124,12 +88,3 @@ app.route('/status', status);
 app.route('/tus', tusAPI);
 
 export default app;
-class MockContext implements ExecutionContext {
-  passThroughOnException(): void {
-    throw new Error('Method not implemented.');
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async waitUntil(promise: Promise<any>): Promise<void> {
-    await promise;
-  }
-}

@@ -1,10 +1,10 @@
 import * as users from './schema/users';
-import * as socials from './schema/socials';
+import * as posts from './schema/posts';
+import * as comments from './schema/comments';
+import * as categories from './schema/categories';
+import * as categoriesToPosts from './schema/categoriesToPosts';
 import * as userKeys from './schema/userKeys';
-import * as products from './schema/products';
-import * as features from './schema/features';
 import * as userSessions from './schema/userSessions';
-import * as skus from './schema/skus';
 
 import { AppContext } from '../server';
 import { isAdminOrEditor } from './config-helpers';
@@ -193,45 +193,32 @@ export const apiConfig: ApiConfig[] = [];
 
 export const tableSchemas = {
   users,
-  socials,
+  posts,
+  comments,
+  categories,
+  categoriesToPosts,
   userKeys,
-  userSessions,
-  products,
-  features,
-  skus
+  userSessions
 };
 
 export const schema = {
   schema: {
     users: users.table,
     usersRelations: users.relation,
-    socials: socials.table,
+    posts: posts.table,
+    postsRelations: posts.relation,
+    comments: comments.table,
+    commentsRelations: comments.relation,
+    categories: categories.table,
+    categoriesRelations: categories.relation,
+    categoriesToPosts: categoriesToPosts.table,
+    categoriesToPostsRelations: categoriesToPosts.relation,
     userKeys: userKeys.table,
     userKeysRelations: userKeys.relation,
     userSessions: userSessions.table,
-    userSessionsRelations: userSessions.relation,
-    products: products.table,
-    productsRelations: products.relation,
-    features: features.table,
-    skus: skus.table,
-    skusRelations: skus.relation
+    userSessionsRelations: userSessions.relation
   }
 };
-
-//This loses typing features of Drizzle
-
-// export const schema = {
-//   schema: Object.keys(tableSchemas).reduce<Record<string, any>>((acc, key) => {
-//     const schema = tableSchemas[key];
-//     if (schema.table) {
-//       acc[key] = schema.table;
-//     }
-//     if (schema.relation) {
-//       acc[`${key}Relations`] = schema.relation;
-//     }
-//     return acc;
-//   }, {})
-// };
 
 for (const key of Object.keys(tableSchemas)) {
   const table = tableSchemas[key];

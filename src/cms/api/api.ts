@@ -71,7 +71,7 @@ tables.forEach((entry) => {
         entry.table,
         params,
         ctx.req.url,
-        'kv',
+        'fastest',
         undefined
       );
 
@@ -142,7 +142,7 @@ tables.forEach((entry) => {
 
     ctx.env.D1DATA = ctx.env.D1DATA;
 
-    source = source || 'kv';
+    source = source || 'fastest';
     if (includeContentType !== undefined) {
       source = 'd1';
     }

@@ -9,8 +9,7 @@ export type Bindings = {
   AUTH_HASH?: 'SHA512' | 'SHA384' | 'SHA256';
   AUTH_KDF?: 'pbkdf2' | 'scrypt';
   ENVIRONMENT?: 'production' | 'development';
-  R2_STORAGE?: R2Bucket;
-  SENTRY_DSN?: string;
+  R2STORAGE?: R2Bucket;
 };
 
 declare global {

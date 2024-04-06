@@ -1,1 +1,0 @@
-ALTER TABLE features ADD `link_text` text;

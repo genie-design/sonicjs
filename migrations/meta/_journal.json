@@ -36,34 +36,6 @@
       "when": 1707536129830,
       "tag": "0004_eager_nightshade",
       "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1709264594591,
-      "tag": "0005_lowly_shockwave",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "5",
-      "when": 1709265709047,
-      "tag": "0006_absent_william_stryker",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "5",
-      "when": 1709516181226,
-      "tag": "0007_shallow_bloodscream",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "5",
-      "when": 1709779304398,
-      "tag": "0008_breezy_lila_cheney",
-      "breakpoints": true
     }
   ]
 }
