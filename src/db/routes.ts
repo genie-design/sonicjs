@@ -202,17 +202,36 @@ export const tableSchemas = {
 };
 
 export const schema = {
-  schema: Object.keys(tableSchemas).reduce<Record<string, any>>((acc, key) => {
-    const schema = tableSchemas[key];
-    if (schema.table) {
-      acc[key] = schema.table;
-    }
-    if (schema.relation) {
-      acc[`${key}Relations`] = schema.relation;
-    }
-    return acc;
-  }, {})
+  schema: {
+    users: users.table,
+    usersRelations: users.relation,
+    socials: socials.table,
+    userKeys: userKeys.table,
+    userKeysRelations: userKeys.relation,
+    userSessions: userSessions.table,
+    userSessionsRelations: userSessions.relation,
+    products: products.table,
+    productsRelations: products.relation,
+    features: features.table,
+    skus: skus.table,
+    skusRelations: skus.relation
+  }
 };
+
+//This loses typing features of Drizzle
+
+// export const schema = {
+//   schema: Object.keys(tableSchemas).reduce<Record<string, any>>((acc, key) => {
+//     const schema = tableSchemas[key];
+//     if (schema.table) {
+//       acc[key] = schema.table;
+//     }
+//     if (schema.relation) {
+//       acc[`${key}Relations`] = schema.relation;
+//     }
+//     return acc;
+//   }, {})
+// };
 
 for (const key of Object.keys(tableSchemas)) {
   const table = tableSchemas[key];

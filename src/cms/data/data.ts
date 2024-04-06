@@ -1,6 +1,6 @@
 import { DrizzleD1Database, drizzle } from 'drizzle-orm/d1';
 import { v4 as uuidv4 } from 'uuid';
-import { DefaultLogger, LogWriter, eq } from 'drizzle-orm';
+import { DefaultLogger, LogWriter, eq, and, asc, desc } from 'drizzle-orm';
 import {
   addToInMemoryCache,
   getFromInMemoryCache,
@@ -23,6 +23,7 @@ import {
   updateD1Data
 } from './d1-data';
 import { log } from '../util/logger';
+import { schema } from '../../db/routes';
 
 // export async function getRecordOld(d1, kv, id) {
 //   const cacheKey = addCachePrefix(id);
@@ -121,6 +122,23 @@ export async function getRecords(
     executionCtx = ctx.executionCtx;
   } catch (err) {}
 
+  const { sortDirection, sortBy, limit, offset, ...filters } = params;
+  const drzl = drizzle(ctx.env.D1DATA, schema);
+  const drizzleResults = await drzl.query.products.findMany({
+    orderBy:
+      sortDirection === 'asc'
+        ? [asc(sortBy)]
+        : sortDirection
+        ? [desc(sortBy)]
+        : undefined,
+    limit: limit ?? 0,
+    offset: offset ?? 0,
+    where:
+      filters && Object.keys(filters).length > 0
+        ? and(...Object.keys(filters).map((key) => eq(key, filters[key])))
+        : undefined
+  });
+  console.log('bam', drizzleResults);
   if (source == 'fastest' || source == 'kv') {
     log(ctx, {
       level: 'verbose',
@@ -189,11 +207,7 @@ export async function getRecords(
       level: 'verbose',
       message: 'getRecords getD1DataByTable start'
     });
-    d1Data = await getD1DataByTable(
-      ctx.env.D1DATA,
-      table,
-      params
-    );
+    d1Data = await getD1DataByTable(ctx.env.D1DATA, table, params);
     log(ctx, {
       level: 'verbose',
       message: 'getRecords getD1DataByTable end'

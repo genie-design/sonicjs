@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { Relations, and, eq } from 'drizzle-orm';
-import { tableSchemas } from '../../db/routes';
+import { schema, tableSchemas } from '../../db/routes';
 
 export async function getAllContent(db) {
   const { results } = await db.prepare('SELECT * FROM users').all();
@@ -9,6 +9,7 @@ export async function getAllContent(db) {
 
 export async function getD1DataByTable(db, table, params) {
   const sql = generateSelectSql(table, params);
+
   const { results } = await db.prepare(sql).all();
   return params?.id ? results[0] : results;
 }
