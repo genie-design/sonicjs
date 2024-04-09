@@ -312,6 +312,10 @@ async function dataRoute(
       </a>
     `;
 
+    console.log(item.updatedOn);
+    if (!(item.updatedOn instanceof Date)) {
+      item.updatedOn = new Date(item.updatedOn);
+    }
     return {
       id: item.id,
       updatedOn: format(item.updatedOn, 'MM/dd/yyyy h:mm b'),
