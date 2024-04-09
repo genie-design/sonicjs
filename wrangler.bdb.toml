@@ -1,0 +1,30 @@
+compatibility_date = "2023-05-18"
+name = "sonicjs"
+workers_dev = true
+main = "src/server.ts"
+
+# Enter your account id
+# This can be found at https://dash.cloudflare.com/ --> Workers & Pages
+#  --> Overview, then in the right sidebar
+account_id = "ed64feca849fbe1d6fa76329e17dd416"
+
+# Run the `wrangler kv:namespace create sonicjs` command and copy the id below
+# Run the `wrangler kv:namespace create sonicjs --preview` command and copy the preview_id below
+# Only update the preview_id and id, leave the binding name as "KVDATA"
+kv_namespaces = [
+  { binding = "KVDATA", preview_id="efe36b292a3f407da88c7f8a93a5b401", id = "38835aa297e54a9ebfd64bcf9f450785" }
+]
+
+# Run the `wrangler d1 create sonicjs` command and copy the id below
+[[d1_databases]]
+binding = "D1DATA"
+database_name = "BROWN_DOG_BISCUITS"
+database_id = "30a95628-56d3-4f61-aebc-b54bf12dd1b"
+
+[[r2_buckets]]
+binding = 'R2_STORAGE' 
+bucket_name = 'brown-dog-biscuits'
+
+[vars]
+SENTRY_DSN = "https://bd89e706a1ab4f055ebe5cd02829b52a@o4504414345166848.ingest.sentry.io/4506527900106752"
+ENVIRONMENT = "development"

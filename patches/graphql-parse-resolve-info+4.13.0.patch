@@ -1,0 +1,40 @@
+diff --git a/node_modules/graphql-parse-resolve-info/build-turbo/index.js b/node_modules/graphql-parse-resolve-info/build-turbo/index.js
+index b10297b..6f90a93 100644
+--- a/node_modules/graphql-parse-resolve-info/build-turbo/index.js
++++ b/node_modules/graphql-parse-resolve-info/build-turbo/index.js
+@@ -1,7 +1,6 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.getAlias = exports.simplify = exports.parse = exports.simplifyParsedResolveInfoFragmentWithType = exports.parseResolveInfo = exports.getAliasFromResolveInfo = void 0;
+-const assert = require("assert");
+ const graphql_1 = require("graphql");
+ const values_1 = require("graphql/execution/values");
+ const debugFactory = require("debug");
+@@ -175,7 +174,10 @@ function fieldTreeFromAST(inASTs, resolveInfo, initTree = {}, options = {}, pare
+             if (DEBUG_ENABLED)
+                 debug("%s[%d] Fragment spread '%s'", depth, instance, name);
+             const fragment = fragments[name];
+-            assert(fragment, 'unknown fragment "' + name + '"');
++if (!fragment) {
++    throw new Error('unknown fragment "' + name + '"');
++}
++
+             let fragmentType = parentType;
+             if (fragment.typeCondition) {
+                 fragmentType = getType(resolveInfo, fragment.typeCondition);
+diff --git a/node_modules/graphql-parse-resolve-info/index.js b/node_modules/graphql-parse-resolve-info/index.js
+index b7577ec..89a15f8 100644
+--- a/node_modules/graphql-parse-resolve-info/index.js
++++ b/node_modules/graphql-parse-resolve-info/index.js
+@@ -1,9 +1,2 @@
+-if (process.env.GRAPHILE_TURBO === "1") {
+-  const major = parseInt(process.version.replace(/\..*$/, ""), 10);
+-  if (major < 12) {
+-    throw new Error("Turbo mode requires Node v12 or higher");
+-  }
+-  module.exports = require("./build-turbo/index.js");
+-} else {
+-  module.exports = require("./node8plus/index.js");
+-}
++module.exports = require("./build-turbo/index.js");
++
