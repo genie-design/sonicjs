@@ -1,3 +1,19 @@
+diff --git a/node_modules/drizzle-graphql/Util/TypeConverter/vanilla/index.js b/node_modules/drizzle-graphql/Util/TypeConverter/vanilla/index.js
+index ecba336..a881745 100644
+--- a/node_modules/drizzle-graphql/Util/TypeConverter/vanilla/index.js
++++ b/node_modules/drizzle-graphql/Util/TypeConverter/vanilla/index.js
+@@ -15,7 +15,10 @@ const columnToGraphQLCore = (column) => {
+     case "boolean":
+       return { type: GraphQLBoolean, description: "Boolean" };
+     case "json":
+-      return { type: GraphQLString, description: "JSON" };
++      return {
++        type: new GraphQLList(GraphQLString),
++        description: `Array<string>`
++      };
+     case "date":
+       return { type: GraphQLString, description: "Date" };
+     case "string":
 diff --git a/node_modules/drizzle-graphql/Util/dataMappers/index.js b/node_modules/drizzle-graphql/Util/dataMappers/index.js
 index 43d567c..ba1af82 100644
 --- a/node_modules/drizzle-graphql/Util/dataMappers/index.js
