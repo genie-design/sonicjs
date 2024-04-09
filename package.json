@@ -12,7 +12,7 @@
     "test": "jest --verbose",
     "generate": "drizzle-kit generate:sqlite --schema=./src/db/schema --out=./migrations",
     "up": "wrangler d1 migrations apply BROWN_DOG_BISCUITS --local",
-    "up:prod": "wrangler d1 migrations apply BROWN_DOG_BISCUITS",
+    "up:prod": "wrangler d1 migrations apply BROWN_DOG_BISCUITS --remote",
     "tail": "wrangler pages deployment tail",
     "check": "run-p check:*",
     "check:tsc": "tsc --noEmit",
@@ -39,6 +39,7 @@
     "wrangler": "^3.25.0"
   },
   "dependencies": {
+    "@cloudflare/pages-plugin-sentry": "^1.1.2",
     "@hono/sentry": "^1.0.0",
     "@lucia-auth/adapter-sqlite": "^2.0.0",
     "@tussle/core": "^0.7.0",

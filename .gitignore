@@ -5,3 +5,4 @@ dist
 wrangler.toml
 wrangler.toml*
 .vscode/settings.json
+wrangler*.toml
