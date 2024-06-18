@@ -12,7 +12,7 @@ import { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { schema as dbSchema } from '../../db/routes';
 import { drizzle } from 'drizzle-orm/d1';
 import { createYoga } from 'graphql-yoga';
-import { buildVanillaSchema } from 'drizzle-graphql';
+import { buildSchema } from 'drizzle-graphql';
 import { is } from 'drizzle-orm/entity';
 const graphqlAPI = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 graphqlAPI.use('*', async (ctx) => {
@@ -21,11 +21,11 @@ graphqlAPI.use('*', async (ctx) => {
   const tables = Object.fromEntries(
     schemaEntries.filter(([key, value]) => is(value, SQLiteTable))
   );
-  const { entities } = buildVanillaSchema(db, dbSchema.schema);
-  delete entities.queries.userkeys;
-  delete entities.queries.userkeysSingle;
-  delete entities.queries.usersessions;
-  delete entities.queries.usersessionsSingle;
+  const { entities } = buildSchema(db);
+  delete entities.queries.userKeys;
+  delete entities.queries.userKeysSingle;
+  delete entities.queries.userSessions;
+  delete entities.queries.userSessionsSingle;
   delete entities.queries.users;
   delete entities.queries.usersSingle;
   const schema = new GraphQLSchema({
@@ -38,8 +38,6 @@ graphqlAPI.use('*', async (ctx) => {
   });
 
   const yoga = createYoga({ schema, logging: 'debug' });
-  // @ts-ignore
-  console.log('HANDLE');
   return yoga.handle(ctx.req, {});
 });
 
