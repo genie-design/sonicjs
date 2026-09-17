@@ -6,7 +6,10 @@ import * as users from './users';
 export const tableName = 'user_sessions';
 
 export const definition = {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+
   user_id: text('user_id')
     .notNull()
     .references(() => users.table.id),

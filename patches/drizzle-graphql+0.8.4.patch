@@ -1,0 +1,39 @@
+diff --git a/node_modules/drizzle-graphql/index.js b/node_modules/drizzle-graphql/index.js
+index fb34b3f..b0a3817 100644
+--- a/node_modules/drizzle-graphql/index.js
++++ b/node_modules/drizzle-graphql/index.js
+@@ -3,6 +3,7 @@ import { is as is6 } from "drizzle-orm";
+ import { MySqlDatabase as MySqlDatabase2 } from "drizzle-orm/mysql-core";
+ import { PgDatabase as PgDatabase2 } from "drizzle-orm/pg-core";
+ import { BaseSQLiteDatabase as BaseSQLiteDatabase2 } from "drizzle-orm/sqlite-core";
++import isArrayBuffer from 'is-array-buffer';
+ import {
+   GraphQLObjectType as GraphQLObjectType5,
+   GraphQLSchema
+@@ -69,7 +70,7 @@ import { GraphQLError } from "graphql";
+ var remapToGraphQLCore = (key, value, tableName, relationMap) => {
+   if (value instanceof Date)
+     return value.toISOString();
+-  if (value instanceof Buffer)
++  if (isArrayBuffer(value))
+     return Array.from(value);
+   if (typeof value === "bigint")
+     return value.toString();
+@@ -77,7 +78,7 @@ var remapToGraphQLCore = (key, value, tableName, relationMap) => {
+     const relations = relationMap?.[tableName];
+     if (relations?.[key])
+       return remapToGraphQLArrayOutput(value, relations[key].targetTableName, relationMap);
+-    return value.map((arrVal) => remapToGraphQLCore(key, arrVal, tableName, relationMap));
++    return JSON.stringify(value);
+   }
+   if (typeof value === "object") {
+     const relations = relationMap?.[tableName];
+@@ -118,7 +119,7 @@ var remapFromGraphQLCore = (value, column, columnName) => {
+     }
+     case "json": {
+       try {
+-        return JSON.parse(value);
++        return value ? JSON.parse(value) : null;
+       } catch (e) {
+         throw new GraphQLError(
+           `Invalid JSON in field '${columnName}':
